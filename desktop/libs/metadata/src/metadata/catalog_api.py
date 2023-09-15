@@ -220,6 +220,8 @@ def _highlight_tags(record, term):
 
 @error_handler
 def list_tags(request):
+  return JsonResponse({'tags': {}, 'status': 0})
+
   interface = request.POST.get('interface', CATALOG.INTERFACE.get())
   prefix = request.POST.get('prefix')
   offset = request.POST.get('offset', 0)
@@ -239,7 +241,7 @@ def list_tags(request):
 
 @error_handler
 def find_entity(request):
-  response = {'status': -1}
+  return JsonResponse({'status': 0})
 
   interface = request.GET.get('interface', CATALOG.INTERFACE.get())
   entity_type = request.GET.get('type', '')

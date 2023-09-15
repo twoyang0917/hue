@@ -24,7 +24,7 @@ from django.utils.translation import ugettext as _
 from beeswax import data_export
 from desktop.lib.i18n import force_unicode, smart_str
 from librdbms.jdbc import Jdbc, query_and_fetch
-
+from indexer.file_format import HiveFormat
 from notebook.connectors.base import Api, QueryError, AuthenticationRequired, _get_snippet_name
 
 
@@ -103,7 +103,7 @@ class JdbcApi(Api):
         'data': data if has_result_set else [],
         'meta': [{
           'name': col[0],
-          'type': col[1],
+          'type': HiveFormat.FIELD_TYPE_TRANSLATE.get(col[1], 'string'),
           'comment': ''
         } for col in description] if has_result_set else [],
         'type': 'table'

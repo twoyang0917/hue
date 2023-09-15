@@ -595,7 +595,7 @@ class Snippet {
     );
 
     self.aceSize = ko.observable(
-      typeof snippet.aceSize != 'undefined' && snippet.aceSize != null ? snippet.aceSize : 100
+      typeof snippet.aceSize != 'undefined' && snippet.aceSize != null ? snippet.aceSize : 1000
     );
     // self.statement_raw.extend({ rateLimit: 150 }); // Should prevent lag from typing but currently send the old query when using the key shortcut
     self.status = ko.observable(
@@ -1851,7 +1851,7 @@ class Snippet {
             self.result.hasResultset(data.handle.has_result_set);
             self.showLogs(true);
             if (data.handle.sync) {
-              self.loadData(data.result, 100);
+              self.loadData(data.result, 1000);
               self.status('available');
               self.progress(100);
               self.result.endTime(new Date());
@@ -2352,7 +2352,7 @@ class Snippet {
                   }
                 } else if (self.status() === 'available' || self.status() === 'success') {
                   if (self.status() === 'available') {
-                    self.fetchResult(100);
+                    self.fetchResult(1000);
                   }
                   self.progress(100);
                   if (self.isSqlDialect()) {

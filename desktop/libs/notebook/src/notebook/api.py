@@ -315,15 +315,14 @@ def fetch_result_data(request):
       snippet['result']['handle']['guid'] if snippet['result'].get('handle') and snippet['result']['handle'].get('guid') else None
     )
 
-    response = _fetch_result_data(request.user, notebook, snippet, operation_id, rows=rows, start_over=start_over)
+    response = _fetch_result_data(request, notebook, snippet, operation_id, rows=rows, start_over=start_over)
     response['status'] = 0
 
     return JsonResponse(response)
 
 
-def _fetch_result_data(user, notebook=None, snippet=None, operation_id=None, rows=100, start_over=False, nulls_only=False):
-  snippet = _get_snippet(user, notebook, snippet, operation_id)
-  request = MockRequest(user)
+def _fetch_result_data(request, notebook=None, snippet=None, operation_id=None, rows=100, start_over=False, nulls_only=False):
+  snippet = _get_snippet(request.user, notebook, snippet, operation_id)
 
   response = {
     'result': get_api(request, snippet).fetch_result(notebook, snippet, rows, start_over)
@@ -571,7 +570,17 @@ def _historify(notebook, user):
 
 def _get_statement(notebook):
   if notebook['snippets'] and len(notebook['snippets']) > 0:
-    return Notebook.statement_with_variables(notebook['snippets'][0])
+    snippet = notebook['snippets'][0]
+    try:
+      if snippet.get('executor', {}).get('executables', []):  # With Connectors/Editor 2
+        executable = snippet['executor']['executables'][0]
+        if executable.get('handle'):
+          return executable['handle']['statement']
+        else:
+          return executable['parsedStatement']['statement']
+      return Notebook.statement_with_variables(snippet)
+    except KeyError as e:
+      LOG.warning('Could not get statement from query history: %s' % e)
   return ''
 
 @require_GET
@@ -719,11 +728,23 @@ def close_statement(request):
 
   return JsonResponse(response)
 
+def _ignore_tables(table):
+  if table is None:
+    return False
+
+  IGNORE_TABLES=['dd_blued_overseas_app', 'dd_blued_mainland_app']
+  if table.lower() in IGNORE_TABLES:
+    return True
+  else:
+    return False
 
 @require_POST
 @check_document_access_permission
 @api_error_handler
 def autocomplete(request, server=None, database=None, table=None, column=None, nested=None):
+  if _ignore_tables(table):
+    return JsonResponse({'status': -1, 'message': 'ignored table due to it has too many partitions'})
+
   response = {'status': -1}
 
   # Passed by check_document_access_permission but unused by APIs
@@ -746,6 +767,9 @@ def autocomplete(request, server=None, database=None, table=None, column=None, n
 @check_document_access_permission
 @api_error_handler
 def get_sample_data(request, server=None, database=None, table=None, column=None):
+  if _ignore_tables(table):
+    return JsonResponse({'status': -1, 'message': 'ignored table due to it has too many partitions'})
+
   response = {'status': -1}
 
   # Passed by check_document_access_permission but unused by APIs
@@ -1008,6 +1032,9 @@ def _get_statement_from_file(user, fs, snippet):
 @require_POST
 @api_error_handler
 def describe(request, database, table=None, column=None):
+  if _ignore_tables(table):
+    return JsonResponse({'status': -1, 'message': 'ignored table due to it has too many partitions'})
+
   response = {'status': -1, 'message': ''}
   notebook = json.loads(request.POST.get('notebook', '{}'))
   source_type = request.POST.get('source_type', '')

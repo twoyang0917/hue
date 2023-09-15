@@ -53,6 +53,11 @@ else:
 
 LOG = logging.getLogger(__name__)
 
+# Javascript Number safe range
+def is_js_safe(number):
+  MAX_VALUE = 2 ** 53
+  return True if number >= -MAX_VALUE and number <= MAX_VALUE else False
+
 
 # Materialize and HTML escape results
 def escape_rows(rows, nulls_only=False, encoding=None):
@@ -64,7 +69,7 @@ def escape_rows(rows, nulls_only=False, encoding=None):
 
       for field in row:
         if isinstance(field, numbers.Number):
-          if math.isnan(field) or math.isinf(field):
+          if math.isnan(field) or math.isinf(field) or not is_js_safe(field):
             escaped_field = json.dumps(field)
           else:
             escaped_field = field
@@ -495,7 +500,6 @@ def _update_property_value(properties, key, value):
 def _get_editor_type(editor_id):
   document = Document2.objects.get(id=editor_id)
   return document.type.rsplit('-', 1)[-1]
-
 
 class ApiWrapper():
   def __init__(self, request, snippet):
