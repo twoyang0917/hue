@@ -21,6 +21,7 @@ import json
 import logging
 
 import sqlparse
+import os
 import sys
 
 from django.urls import reverse
@@ -728,21 +729,18 @@ def close_statement(request):
 
   return JsonResponse(response)
 
-def _ignore_tables(table):
+def is_ignore_tables(table):
   if table is None:
     return False
 
-  IGNORE_TABLES=['dd_blued_overseas_app', 'dd_blued_mainland_app']
-  if table.lower() in IGNORE_TABLES:
-    return True
-  else:
-    return False
+  ignore_tables=os.environ.get("IGNORE_TABLES", "").split(",")
+  return True if table.lower() in ignore_tables else False
 
 @require_POST
 @check_document_access_permission
 @api_error_handler
 def autocomplete(request, server=None, database=None, table=None, column=None, nested=None):
-  if _ignore_tables(table):
+  if is_ignore_tables(table):
     return JsonResponse({'status': -1, 'message': 'ignored table due to it has too many partitions'})
 
   response = {'status': -1}
@@ -767,7 +765,7 @@ def autocomplete(request, server=None, database=None, table=None, column=None, n
 @check_document_access_permission
 @api_error_handler
 def get_sample_data(request, server=None, database=None, table=None, column=None):
-  if _ignore_tables(table):
+  if is_ignore_tables(table):
     return JsonResponse({'status': -1, 'message': 'ignored table due to it has too many partitions'})
 
   response = {'status': -1}
@@ -1032,7 +1030,7 @@ def _get_statement_from_file(user, fs, snippet):
 @require_POST
 @api_error_handler
 def describe(request, database, table=None, column=None):
-  if _ignore_tables(table):
+  if is_ignore_tables(table):
     return JsonResponse({'status': -1, 'message': 'ignored table due to it has too many partitions'})
 
   response = {'status': -1, 'message': ''}
