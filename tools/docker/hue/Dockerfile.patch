@@ -3,8 +3,7 @@ FROM gethue/hue:4.8.0
 # change timezone
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Asia/Shanghai \
-    HUE_HOME=/usr/share/hue \
-    HUE_REPO=https://raw.githubusercontent.com/twoyang0917/hue/mypatch
+    HUE_HOME=/usr/share/hue
 
 SHELL ["/bin/bash", "-c"]
 
@@ -12,6 +11,7 @@ RUN apt-get update && apt-get install -y tzdata \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && dpkg-reconfigure --frontend noninteractive tzdata
 
+ADD . /hue
 RUN PATCHED_FILES=(); \
     PATCHED_FILES+=("desktop/core/src/desktop/api2.py"); \
     PATCHED_FILES+=("desktop/core/src/desktop/js/apps/notebook/snippet.js"); \
@@ -21,7 +21,8 @@ RUN PATCHED_FILES=(); \
     PATCHED_FILES+=("desktop/libs/notebook/src/notebook/connectors/jdbc.py"); \
     PATCHED_FILES+=("desktop/libs/notebook/src/notebook/connectors/jdbc_presto.py"); \
     PATCHED_FILES+=("desktop/libs/notebook/src/notebook/models.py"); \
-    for FILE in ${PATCHED_FILES[@]}; do curl -o $HUE_HOME/$FILE $HUE_REPO/$FILE; done
+    for FILE in ${PATCHED_FILES[@]}; do cp -f /hue/$FILE $HUE_HOME/$FILE; done; \
+    rm -rf /hue
 
 COPY tools/docker/hue/presto-jdbc-0.279.jar $HUE_HOME/ext/thirdparty/
 
