@@ -54,7 +54,7 @@ else:
 LOG = logging.getLogger(__name__)
 
 def is_safe_number(number):
-  """is the number safe in JavaScript. [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]""""
+  """is the number safe in JavaScript. [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER]"""
   MAX_SAFE_INTEGER = 2 ** 53 - 1
   return True if number >= -MAX_SAFE_INTEGER and number <= MAX_SAFE_INTEGER else False
 
