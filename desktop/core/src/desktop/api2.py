@@ -977,6 +977,8 @@ def gist_get(request):
 
 
 def search_entities(request):
+  return JsonResponse({'status': 1, 'message': _('Navigator not enabled')})
+
   sources = json.loads(request.POST.get('sources')) or []
 
   if 'documents' in sources:

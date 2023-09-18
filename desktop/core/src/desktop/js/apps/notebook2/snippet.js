@@ -406,7 +406,7 @@ export default class Snippet {
       this.parentVm.huePubSubId
     );
 
-    this.aceSize = ko.observable(snippetRaw.aceSize || 100);
+    this.aceSize = ko.observable(snippetRaw.aceSize || 1000);
     this.status = ko.observable(snippetRaw.status || STATUS.loading);
     this.statusForButtons = ko.observable(STATUS_FOR_BUTTONS.executed);
 
